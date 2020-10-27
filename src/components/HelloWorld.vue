@@ -1,57 +1,122 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
-  </div>
+<v-container>
+    <v-row class="text-center">
+        <v-col cols="12">
+            <v-card>
+                <v-card-title primary-title>
+                    TODO LIST (Lista de tareas)
+                </v-card-title>
+                <v-container>
+                    <v-row>
+                        <v-col cols="12" xs="12" sm="12" md="6" lg="6">
+                            <v-text-field label="Ingrese Tarea" v-model="tarea_.tarea" />
+                        </v-col>
+                        <v-col cols="12" xs="12" sm="12" md="6" lg="6">
+                            <v-btn block color="warning" dark @click="editarTarea(tarea_)" v-if="tarea_.edit">Editar Tarea</v-btn>
+                            <v-btn block color="success" dark @click="addTareas" v-else>Agregar Tarea</v-btn>
+                        </v-col>
+                        <v-col cols="12" xs="12" sm="12" md="12" lg="12">
+                            <v-data-table :headers="headers" :items="tareas" hide-default-footer class="elevation-1">
+                                <template v-slot:item.accion="{item}">
+                                    <td>
+                                        <v-btn color="warning" icon @click="editTarea(item)">
+                                            <v-icon>mdi-pencil</v-icon>
+                                        </v-btn>
+                                        <v-btn color="error" icon @click="eliminarTarea(item)">
+                                            <v-icon>mdi-delete</v-icon>
+                                        </v-btn>
+                                        <v-btn color="success" icon @click="checkTara(item)">
+                                            <v-icon>mdi-check</v-icon>
+                                        </v-btn>
+                                    </td>
+                                </template>
+                                <template v-slot:item.tarea="{item}">
+                                    <td>
+                                        <v-alert color="success" v-if="item.completada">
+                                            <v-icon>mdi-check</v-icon>
+                                        </v-alert>
+                                        {{item}}
+                                    </td>
+                                </template>
+                            </v-data-table>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            </v-card>
+        </v-col>
+    </v-row>
+</v-container>
 </template>
 
 <script>
+import {
+    mapGetters
+} from 'vuex'
 export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
-  }
+    name: 'TodoList',
+
+    data: () => ({
+        headers: [{
+                text: 'Tareas',
+                sortable: true,
+                value: 'tarea'
+            },
+            {
+                text: 'Accion',
+                sortable: true,
+                value: 'accion'
+            }
+        ],
+    }),
+    computed: {
+        ...mapGetters(['tareas', 'tarea']),
+        tarea_: {
+            get() {
+                return this.tarea
+            },
+            set(val) {
+                this.$store.commit('setTarea', val)
+            }
+        }
+    },
+    methods: {
+        addTareas() {
+            try {
+                this.$store.commit('setTareas', this.tarea_)
+                this.tarea_ = {
+                    tarea: '',
+                    completada: false,
+                    edit: false,
+                }
+            } catch (e) {
+                console.log(e)
+            }
+        },
+        editTarea(item) {
+            try {
+                item.edit = true
+                this.$store.commit('setTarea', item)
+            } catch (e) {
+                console.log(e)
+            }
+        },
+        editarTarea(item) {
+            this.$store.commit('setTarea', item)
+            this.tarea_ = {
+                tarea: '',
+                completada: false,
+                edit: false,
+            }
+        },
+        eliminarTarea(t) {
+            var indice = this.tareas.indexOf(t)
+            this.tareas.splice(indice, 1);
+        },
+        checkTara(item) {
+            var indice = this.tareas.indexOf(item)
+            this.tareas[indice].completada = true
+        }
+
+    }
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
-</style>
